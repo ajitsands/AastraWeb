@@ -54,7 +54,6 @@ export default function Footer() {
               <li><Link to="/catalogue" className="hover:text-white transition">PDF Brochures</Link></li>
               <li><Link to="/about" className="hover:text-white transition">About AASTRA</Link></li>
               <li><Link to="/contact" className="hover:text-white transition">Project Enquiries</Link></li>
-              <li><Link to="/admin" className="hover:text-white transition">Admin Portal</Link></li>
             </ul>
           </div>
 

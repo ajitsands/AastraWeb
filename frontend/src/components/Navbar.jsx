@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Sun, Moon, Search, Menu, X, ChevronDown, ShieldCheck, FileText } from 'lucide-react';
+import { Sun, Moon, Search, Menu, X, ChevronDown, FileText } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { api } from '../api/client';
 
@@ -48,9 +48,6 @@ export default function Navbar() {
             </Link>
             <Link to="/contact" className="hover:text-aastra-gold transition">
               Trade Enquiries
-            </Link>
-            <Link to="/admin" className="hover:text-aastra-gold transition flex items-center gap-1 text-neutral-400">
-              <ShieldCheck className="w-3 h-3" /> Admin
             </Link>
           </div>
         </div>
@@ -239,7 +236,6 @@ export default function Navbar() {
             ['/catalogue', 'PDF Catalogue'],
             ['/about', 'About AASTRA'],
             ['/contact', 'Trade Enquiry'],
-            ['/admin', 'Admin Panel'],
           ].map(([to, label]) => (
             <Link
               key={to}
