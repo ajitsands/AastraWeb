@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  h1, h2, h3, .font-classic {
+    font-family: 'Montserrat', 'Inter', system-ui, sans-serif;
+    letter-spacing: -0.015em;
+  }
+}
+
+/* Crisp architectural hairlines */
+.gold-rule {
+  background: linear-gradient(90deg, transparent, #C9A227 20%, #C9A227 80%, transparent);
+}
+
+/* Print / PDF styles for clean native printing if desired */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+  body * {
+    visibility: hidden;
+  }
+  .aastra-pdf-sheet,
+  .aastra-pdf-sheet * {
+    visibility: visible;
+  }
+  .aastra-pdf-sheet {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 210mm !important;
+    min-height: 297mm !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    transform: none !important;
+  }
+}

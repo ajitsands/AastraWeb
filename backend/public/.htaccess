@@ -1,0 +1,12 @@
+RewriteEngine On
+
+# Preserve Authorization header for JWT auth on Apache/cPanel
+RewriteCond %{HTTP:Authorization} .
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+# Serve existing files/folders directly (e.g. /uploads/*)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Route all API requests to index.php
+RewriteRule ^ index.php [QSA,L]

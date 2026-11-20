@@ -1,0 +1,13 @@
+RewriteEngine On
+RewriteBase /
+
+# Do not rewrite API or Uploads paths (handled by PHP backend)
+RewriteRule ^api/ - [L]
+RewriteRule ^uploads/ - [L]
+
+# Serve existing files and directories directly
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Fallback to React SPA index.html
+RewriteRule ^ index.html [L]
