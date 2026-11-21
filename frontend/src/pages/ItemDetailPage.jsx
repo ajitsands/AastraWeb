@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, FileDown, Mail, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { api, resolveAssetUrl } from '../api/client';
@@ -11,16 +11,26 @@ export default function ItemDetailPage() {
   const [activeImgIdx, setActiveImgIdx] = useState(0);
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [loading, setLoading] = useState(true);
+  const pdfSectionRef = useRef(null);
 
   useEffect(() => {
     setLoading(true);
     setActiveImgIdx(0);
+    setShowPdfModal(false);
     api
       .getItem(slug)
       .then(setItem)
       .catch(() => setItem(null))
       .finally(() => setLoading(false));
   }, [slug]);
+
+  useEffect(() => {
+    if (showPdfModal && pdfSectionRef.current) {
+      setTimeout(() => {
+        pdfSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 60);
+    }
+  }, [showPdfModal]);
 
   if (loading) {
     return (
@@ -233,7 +243,10 @@ export default function ItemDetailPage() {
 
       {/* Expandable Live PDF Datasheet Preview & Download */}
       {showPdfModal && (
-        <section className="mt-12 pt-10 border-t border-aastra-silver dark:border-neutral-800">
+        <section
+          ref={pdfSectionRef}
+          className="mt-12 pt-10 border-t border-aastra-silver dark:border-neutral-800 scroll-mt-24"
+        >
           <div className="bg-aastra-pearl dark:bg-[#121212] border border-aastra-silver dark:border-neutral-800 p-4 sm:p-8">
             <CataloguePdfPreview group={singleItemGroup} />
           </div>

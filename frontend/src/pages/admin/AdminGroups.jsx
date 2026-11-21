@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Plus, Pencil, Trash2, Eye, X, ArrowUp, ArrowDown } from 'lucide-react';
 import { api } from '../../api/client';
 import CataloguePdfPreview from '../../components/CataloguePdfPreview';
@@ -27,8 +27,17 @@ export default function AdminGroups() {
   const [editingId, setEditingId] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [previewGroup, setPreviewGroup] = useState(null);
+  const previewRef = useRef(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (previewGroup && previewRef.current) {
+      setTimeout(() => {
+        previewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 60);
+    }
+  }, [previewGroup]);
 
   const loadAll = () => {
     Promise.all([
@@ -469,7 +478,10 @@ export default function AdminGroups() {
 
       {/* Live A4 PDF Preview & Export Drawer */}
       {previewGroup && (
-        <div className="bg-aastra-pearl dark:bg-[#121212] border-2 border-aastra-gold p-4 sm:p-6">
+        <div
+          ref={previewRef}
+          className="bg-aastra-pearl dark:bg-[#121212] border-2 border-aastra-gold p-4 sm:p-6 scroll-mt-20"
+        >
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">
               Live A4 PDF Preview — <span className="font-mono">{previewGroup.page_code}</span>
