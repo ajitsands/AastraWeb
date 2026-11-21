@@ -60,6 +60,10 @@ export default function CataloguePdfPreview({
         item_code: pageItems.length === 1 ? pageItems[0]?.code : null,
       });
 
+      if (document.fonts && document.fonts.ready) {
+        await document.fonts.ready;
+      }
+
       const el = sheetRef.current;
       // Temporarily reset transform for crisp 1:1 A4 capture regardless of mobile screen width
       const prevTransform = el.style.transform;
@@ -74,6 +78,12 @@ export default function CataloguePdfPreview({
         height: 1123,
         windowWidth: 794,
         windowHeight: 1123,
+        onclone: (clonedDoc) => {
+          // Compensate html2canvas downward text baseline offset inside table cells
+          clonedDoc.querySelectorAll('.pdf-table-cell-inner').forEach((node) => {
+            node.style.transform = 'translateY(-3px)';
+          });
+        },
       });
 
       el.style.transform = prevTransform;
@@ -281,46 +291,52 @@ export default function CataloguePdfPreview({
                 marginBottom: isCompact ? '10px' : '14px',
               }}
             >
-              <div
-                style={{
-                  backgroundColor: '#6F7277',
-                  color: '#FFFFFF',
-                  height: '30px',
-                  padding: '0 20px',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '12.5px',
-                  fontWeight: 700,
-                  letterSpacing: '1.8px',
-                  lineHeight: 1,
-                  fontFamily: 'Montserrat, Inter, Arial, sans-serif',
-                  borderLeft: `4px solid ${accentColor}`,
-                  paddingBottom: '2px',
-                }}
-              >
-                {categoryBadge}
-              </div>
+              {/* Category Badge SVG — guaranteed dead-center in both Browser & PDF */}
+              {(() => {
+                const w = Math.max(150, categoryBadge.length * 11 + 40);
+                return (
+                  <svg width={w} height="30" viewBox={`0 0 ${w} 30`} xmlns="http://www.w3.org/2000/svg">
+                    <rect x="0" y="0" width={w} height="30" fill="#6F7277" />
+                    <rect x="0" y="0" width="4" height="30" fill={accentColor} />
+                    <text
+                      x={(w + 4) / 2}
+                      y="15.5"
+                      fill="#FFFFFF"
+                      fontSize="12.5"
+                      fontWeight="700"
+                      letterSpacing="1.8"
+                      fontFamily="Montserrat, Inter, Arial, sans-serif"
+                      textAnchor="middle"
+                      dominantBaseline="central"
+                    >
+                      {categoryBadge}
+                    </text>
+                  </svg>
+                );
+              })()}
 
-              <div
-                style={{
-                  backgroundColor: '#919499',
-                  color: '#FFFFFF',
-                  height: '24px',
-                  padding: '0 16px',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '9.5px',
-                  fontWeight: 600,
-                  letterSpacing: '1.8px',
-                  lineHeight: 1,
-                  fontFamily: 'Montserrat, Inter, Arial, sans-serif',
-                  paddingBottom: '2px',
-                }}
-              >
-                {sectionLabel}
-              </div>
+              {/* Section Badge SVG — guaranteed dead-center in both Browser & PDF */}
+              {(() => {
+                const sw = Math.max(96, sectionLabel.length * 8.5 + 32);
+                return (
+                  <svg width={sw} height="24" viewBox={`0 0 ${sw} 24`} xmlns="http://www.w3.org/2000/svg">
+                    <rect x="0" y="0" width={sw} height="24" fill="#919499" />
+                    <text
+                      x={sw / 2}
+                      y="12.5"
+                      fill="#FFFFFF"
+                      fontSize="9.5"
+                      fontWeight="600"
+                      letterSpacing="1.8"
+                      fontFamily="Montserrat, Inter, Arial, sans-serif"
+                      textAnchor="middle"
+                      dominantBaseline="central"
+                    >
+                      {sectionLabel}
+                    </text>
+                  </svg>
+                );
+              })()}
             </div>
           </div>
 
@@ -509,27 +525,29 @@ export default function CataloguePdfPreview({
                 gap: '12px',
               }}
             >
-              {/* Left: AH.Chapter.Page Badge (Clean Sans-Serif, Vertically & Horizontally Centered) */}
-              <div
-                style={{
-                  backgroundColor: '#7A7D82',
-                  color: '#FFFFFF',
-                  height: '34px',
-                  minWidth: '108px',
-                  padding: '0 18px 2px 18px',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '14px',
-                  fontWeight: 700,
-                  letterSpacing: '1.6px',
-                  lineHeight: 1,
-                  fontFamily: 'Montserrat, Inter, Arial, sans-serif',
-                  borderLeft: `4px solid ${accentColor}`,
-                }}
-              >
-                {pageCode}
-              </div>
+              {/* Left: AH.Chapter.Page Badge SVG — guaranteed dead-center in both Browser & PDF */}
+              {(() => {
+                const pw = Math.max(116, pageCode.length * 11.5 + 36);
+                return (
+                  <svg width={pw} height="34" viewBox={`0 0 ${pw} 34`} xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+                    <rect x="0" y="0" width={pw} height="34" fill="#7A7D82" />
+                    <rect x="0" y="0" width="4" height="34" fill={accentColor} />
+                    <text
+                      x={(pw + 4) / 2}
+                      y="17.5"
+                      fill="#FFFFFF"
+                      fontSize="14"
+                      fontWeight="700"
+                      letterSpacing="1.6"
+                      fontFamily="Montserrat, Inter, Arial, sans-serif"
+                      textAnchor="middle"
+                      dominantBaseline="central"
+                    >
+                      {pageCode}
+                    </text>
+                  </svg>
+                );
+              })()}
 
               {/* Center: Company Contact Details */}
               <div

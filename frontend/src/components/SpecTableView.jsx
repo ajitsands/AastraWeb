@@ -45,6 +45,7 @@ export default function SpecTableView({ table, mode = 'web', compact = false }) 
                     }}
                   >
                     <div
+                      className="pdf-table-cell-inner"
                       style={{
                         display: 'flex',
                         alignItems: 'center',
