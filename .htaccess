@@ -1,0 +1,25 @@
+Options -Indexes
+RewriteEngine On
+RewriteBase /
+
+# Preserve Authorization header for Admin JWT login on Apache/cPanel
+RewriteCond %{HTTP:Authorization} .
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+# Security: block direct web access to private directories & SQL files
+RewriteRule ^(\.git|database|backend/(config|core|models|controllers))(/|$) - [F,L]
+
+# 1. Route /api/* requests to PHP MVC backend
+RewriteRule ^api(/.*)?$ backend/public/index.php [QSA,L]
+
+# 2. Route /uploads/* to backend/public/uploads/*
+RewriteRule ^uploads/(.*)$ backend/public/uploads/$1 [L]
+
+# 3. Serve built React frontend static files from frontend/dist/
+RewriteCond %{DOCUMENT_ROOT}/frontend/dist/$1 -f
+RewriteRule ^(.*)$ frontend/dist/$1 [L]
+
+# 4. Fallback all other routes (React Router SPA: /, /categories, /catalogue, /admin, etc.)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ frontend/dist/index.html [L]

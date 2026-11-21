@@ -1,6 +1,5 @@
-# Node / Frontend
+# Node / Frontend (dist/ is committed for zero-build cPanel/Apache deployment)
 frontend/node_modules/
-frontend/dist/
 frontend/.vite/
 npm-debug.log*
 
