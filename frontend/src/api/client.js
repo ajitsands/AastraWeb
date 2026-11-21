@@ -118,4 +118,17 @@ export const api = {
   getEnquiries: () => request('/api/enquiries'),
   updateEnquiryStatus: (id, status) =>
     request(`/api/enquiries/${id}`, { method: 'PUT', body: JSON.stringify({ status }) }),
+
+  // Analytics & PDF Download Tracking
+  trackEvent: (payload) =>
+    request('/api/analytics/track', { method: 'POST', body: JSON.stringify(payload) }).catch(() => {}),
+  getAnalyticsSummary: (days = 30) => request(`/api/analytics/summary?days=${days}`),
+  getAnalyticsLogs: (params = {}) => {
+    const qs = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') qs.set(k, v);
+    });
+    const qStr = qs.toString();
+    return request(`/api/analytics/logs${qStr ? `?${qStr}` : ''}`);
+  },
 };

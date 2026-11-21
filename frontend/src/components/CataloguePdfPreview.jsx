@@ -1,15 +1,15 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { Download, Printer, Loader2, Sparkles } from 'lucide-react';
 import SpecTableView from './SpecTableView';
 import GuaranteeSeal from './GuaranteeSeal';
-import { resolveAssetUrl } from '../api/client';
+import { api, resolveAssetUrl } from '../api/client';
 
 /**
  * AASTRA A4 Architectural Catalogue Page Renderer & PDF Exporter
- * Uniform tight margins (10mm / 38px on all 4 sides), restructured grayscale layout
- * with optional subtle AASTRA brand gold accents.
+ * Uniform tight margins (10mm / 36px on all 4 sides), auto-scales smoothly on mobile & tablet,
+ * and tracks PDF downloads/prints for Admin Analytics.
  */
 export default function CataloguePdfPreview({
   group,
@@ -18,8 +18,25 @@ export default function CataloguePdfPreview({
   scale = 1,
 }) {
   const sheetRef = useRef(null);
+  const containerRef = useRef(null);
   const [exporting, setExporting] = useState(false);
-  const [brandAccent, setBrandAccent] = useState(true); // Subtle gold hairline & seal tint
+  const [brandAccent, setBrandAccent] = useState(true);
+  const [responsiveScale, setResponsiveScale] = useState(scale);
+
+  useEffect(() => {
+    const updateScale = () => {
+      if (!containerRef.current) return;
+      const availWidth = containerRef.current.clientWidth;
+      if (availWidth > 0) {
+        const fitted = Math.min(scale, availWidth / 794);
+        setResponsiveScale(fitted);
+      }
+    };
+    updateScale();
+    const ro = new ResizeObserver(updateScale);
+    if (containerRef.current) ro.observe(containerRef.current);
+    return () => ro.disconnect();
+  }, [scale]);
 
   const pageItems = items.length ? items : group?.items || [];
   const isCompact = group?.layout_mode === 'compact' || pageItems.length >= 3;
@@ -33,8 +50,18 @@ export default function CataloguePdfPreview({
     if (!sheetRef.current || exporting) return;
     setExporting(true);
     try {
+      // Track PDF download in backend analytics (non-blocking)
+      api.trackEvent({
+        event_type: 'pdf_download',
+        page_path: window.location.pathname + window.location.search,
+        page_title: document.title,
+        pdf_page_code: pageCode,
+        pdf_title: group?.title || categoryBadge,
+        item_code: pageItems.length === 1 ? pageItems[0]?.code : null,
+      });
+
       const el = sheetRef.current;
-      // Temporarily reset transform if scaled for crisp 1:1 capture
+      // Temporarily reset transform for crisp 1:1 A4 capture regardless of mobile screen width
       const prevTransform = el.style.transform;
       el.style.transform = 'none';
 
@@ -70,29 +97,37 @@ export default function CataloguePdfPreview({
   };
 
   const handlePrint = () => {
+    api.trackEvent({
+      event_type: 'pdf_print',
+      page_path: window.location.pathname + window.location.search,
+      page_title: document.title,
+      pdf_page_code: pageCode,
+      pdf_title: group?.title || categoryBadge,
+      item_code: pageItems.length === 1 ? pageItems[0]?.code : null,
+    });
     window.print();
   };
 
   const accentColor = brandAccent ? '#C9A227' : '#6E7175';
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center w-full">
       {showControls && (
         <div className="w-full max-w-[794px] mb-4 flex flex-wrap items-center justify-between gap-3 p-3 bg-white dark:bg-neutral-900 border border-aastra-silver dark:border-neutral-800 rounded-sm shadow-sm">
-          <div className="flex items-center gap-3">
-            <span className="px-2.5 py-1 bg-aastra-black text-white dark:bg-aastra-gold dark:text-black text-xs font-mono font-semibold tracking-wider">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="px-2.5 py-1 bg-aastra-black text-white dark:bg-aastra-gold dark:text-black text-xs font-mono font-semibold tracking-wider shrink-0">
               {pageCode}
             </span>
-            <span className="text-sm font-medium text-aastra-black dark:text-neutral-200">
+            <span className="text-xs sm:text-sm font-medium text-aastra-black dark:text-neutral-200 truncate">
               {group?.title || 'Catalogue Page'}
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
             <button
               type="button"
               onClick={() => setBrandAccent((v) => !v)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border rounded-sm transition ${
+              className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-medium border rounded-sm transition ${
                 brandAccent
                   ? 'border-aastra-gold bg-aastra-gold-tint text-aastra-black dark:bg-aastra-gold/20 dark:text-aastra-gold-light'
                   : 'border-aastra-silver dark:border-neutral-700 text-aastra-slate dark:text-neutral-300'
@@ -100,7 +135,8 @@ export default function CataloguePdfPreview({
               title="Toggle subtle brand gold accent on grayscale sheet"
             >
               <Sparkles className="w-3.5 h-3.5" />
-              {brandAccent ? 'Grayscale + Gold Trim' : 'Pure Grayscale'}
+              <span className="hidden xs:inline">{brandAccent ? 'Grayscale + Gold Trim' : 'Pure Grayscale'}</span>
+              <span className="xs:hidden">{brandAccent ? 'Gold Trim' : 'Grayscale'}</span>
             </button>
 
             <button
@@ -119,7 +155,7 @@ export default function CataloguePdfPreview({
             >
               {exporting ? (
                 <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Generating PDF...
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Generating...
                 </>
               ) : (
                 <>
@@ -131,10 +167,11 @@ export default function CataloguePdfPreview({
         </div>
       )}
 
-      {/* A4 Sheet Wrapper (794px x 1123px = 210mm x 297mm @ 96dpi) */}
+      {/* Responsive A4 Sheet Wrapper — auto-fits cleanly on Mobile, Tablet & Desktop */}
       <div
-        className="overflow-x-auto w-full flex justify-center pb-2"
-        style={{ minHeight: scale < 1 ? `${1123 * scale + 16}px` : undefined }}
+        ref={containerRef}
+        className="w-full flex justify-center overflow-hidden"
+        style={{ height: `${Math.ceil(1123 * responsiveScale) + 12}px` }}
       >
         <div
           ref={sheetRef}
@@ -142,9 +179,9 @@ export default function CataloguePdfPreview({
           style={{
             width: '794px',
             height: '1123px',
-            padding: '36px', // Equal ~9.5mm tight margins on Top, Bottom, Left, Right!
+            padding: '36px',
             boxSizing: 'border-box',
-            transform: scale !== 1 ? `scale(${scale})` : undefined,
+            transform: responsiveScale !== 1 ? `scale(${responsiveScale})` : undefined,
             transformOrigin: 'top center',
             fontFamily: 'Inter, Arial, sans-serif',
           }}

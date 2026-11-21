@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FolderTree, Palette, Package, FileText, Mail, ArrowRight } from 'lucide-react';
+import { FolderTree, Palette, Package, FileText, Mail, ArrowRight, Eye, Users, FileDown } from 'lucide-react';
 import { api } from '../../api/client';
 
 export default function AdminDashboard() {
@@ -17,6 +17,12 @@ export default function AdminDashboard() {
     { label: 'Finishes', value: stats?.finishes ?? '—', to: '/admin/finishes', icon: Palette },
     { label: 'Hardware Items', value: stats?.items ?? '—', to: '/admin/items', icon: Package },
     { label: 'PDF Page Groups', value: stats?.groups ?? '—', to: '/admin/groups', icon: FileText },
+  ];
+
+  const analyticsCards = [
+    { label: 'Page Views (30d)', value: stats?.page_views ?? 0, to: '/admin/analytics', icon: Eye },
+    { label: 'Unique Visitors (30d)', value: stats?.unique_visitors ?? 0, to: '/admin/analytics', icon: Users },
+    { label: 'PDF Downloads (30d)', value: stats?.pdf_downloads ?? 0, to: '/admin/analytics', icon: FileDown },
   ];
 
   return (
@@ -49,6 +55,23 @@ export default function AdminDashboard() {
             <div className="text-xs uppercase tracking-wider text-aastra-slate dark:text-neutral-400 mt-1">
               {label}
             </div>
+          </Link>
+        ))}
+      </div>
+
+      {/* Visitor & PDF Analytics Summary */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {analyticsCards.map(({ label, value, to, icon: Icon }) => (
+          <Link
+            key={label}
+            to={to}
+            className="bg-aastra-black text-white border border-aastra-gold/40 hover:border-aastra-gold p-5 transition group flex items-center justify-between"
+          >
+            <div>
+              <div className="text-2xl font-bold text-aastra-gold">{value}</div>
+              <div className="text-xs uppercase tracking-wider text-neutral-300 mt-1">{label}</div>
+            </div>
+            <Icon className="w-6 h-6 text-aastra-gold/80 group-hover:scale-110 transition" />
           </Link>
         ))}
       </div>

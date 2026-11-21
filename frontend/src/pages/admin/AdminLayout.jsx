@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, NavLink, Outlet, Navigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -6,16 +6,20 @@ import {
   Palette,
   Package,
   FileText,
+  BarChart3,
   LogOut,
   ExternalLink,
   Sun,
   Moon,
+  Menu,
+  X,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 
 const navItems = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { to: '/admin/analytics', label: 'Visitor & PDF Analytics', icon: BarChart3 },
   { to: '/admin/categories', label: 'Categories', icon: FolderTree },
   { to: '/admin/finishes', label: 'Finishes', icon: Palette },
   { to: '/admin/items', label: 'Items & Tables', icon: Package },
@@ -25,6 +29,7 @@ const navItems = [
 export default function AdminLayout() {
   const { isAuthenticated, loading, admin, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   if (loading) {
     return (
@@ -40,23 +45,44 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen flex bg-aastra-pearl dark:bg-[#111111]">
-      {/* Sidebar */}
-      <aside className="w-64 bg-aastra-black text-neutral-300 flex flex-col shrink-0 border-r border-neutral-800">
-        <div className="h-20 px-6 flex items-center border-b border-neutral-800">
-          <Link to="/admin" className="flex flex-col">
+      {/* Mobile/Tablet Backdrop */}
+      {sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 bg-black/60 z-40 lg:hidden"
+        />
+      )}
+
+      {/* Responsive Sidebar (Drawer on mobile/tablet, fixed on lg+) */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-aastra-black text-neutral-300 flex flex-col shrink-0 border-r border-neutral-800 transform transition-transform duration-200 lg:static lg:translate-x-0 ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="h-16 lg:h-20 px-5 flex items-center justify-between border-b border-neutral-800">
+          <Link to="/admin" onClick={() => setSidebarOpen(false)} className="flex flex-col">
             <img src="/brand/logo-gold.gif" alt="AASTRA" className="h-6 w-auto object-contain" />
             <span className="text-[10px] tracking-[0.2em] uppercase text-neutral-500 mt-1">
               Admin Portal
             </span>
           </Link>
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(false)}
+            className="lg:hidden p-1.5 text-neutral-400 hover:text-white"
+            aria-label="Close sidebar"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {navItems.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
               to={to}
               end={end}
+              onClick={() => setSidebarOpen(false)}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium tracking-wide rounded-sm transition ${
                   isActive
@@ -65,7 +91,7 @@ export default function AdminLayout() {
                 }`
               }
             >
-              <Icon className="w-4 h-4" />
+              <Icon className="w-4 h-4 shrink-0" />
               <span>{label}</span>
             </NavLink>
           ))}
@@ -91,21 +117,32 @@ export default function AdminLayout() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 bg-white dark:bg-[#171717] border-b border-aastra-silver dark:border-neutral-800 px-6 flex items-center justify-between">
-          <div className="text-xs uppercase tracking-[0.18em] text-aastra-slate dark:text-neutral-400 font-medium">
-            AASTRA Architectural Hardware — Management
+        <header className="h-16 bg-white dark:bg-[#171717] border-b border-aastra-silver dark:border-neutral-800 px-4 sm:px-6 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(true)}
+              className="lg:hidden p-2 border border-aastra-silver dark:border-neutral-700 rounded-sm text-aastra-black dark:text-white"
+              aria-label="Open menu"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
+            <div className="text-[11px] sm:text-xs uppercase tracking-[0.14em] sm:tracking-[0.18em] text-aastra-slate dark:text-neutral-400 font-medium truncate">
+              AASTRA Architectural Hardware — Management
+            </div>
           </div>
+
           <button
             type="button"
             onClick={toggleTheme}
-            className="p-2 border border-aastra-silver dark:border-neutral-700 rounded-sm text-aastra-slate dark:text-aastra-gold"
+            className="p-2 border border-aastra-silver dark:border-neutral-700 rounded-sm text-aastra-slate dark:text-aastra-gold shrink-0"
             title="Toggle Light/Dark Theme"
           >
             {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
           </button>
         </header>
 
-        <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
           <Outlet />
         </main>
       </div>

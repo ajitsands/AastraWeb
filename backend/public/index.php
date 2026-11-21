@@ -105,6 +105,11 @@ $router->post('/api/enquiries', 'EnquiryController', 'store');
 $router->get('/api/enquiries', 'EnquiryController', 'index');
 $router->put('/api/enquiries/{id}', 'EnquiryController', 'updateStatus');
 
+// Analytics & PDF Download Tracking
+$router->post('/api/analytics/track', 'AnalyticsController', 'track');
+$router->get('/api/analytics/summary', 'AnalyticsController', 'summary');
+$router->get('/api/analytics/logs', 'AnalyticsController', 'logs');
+
 // Inline lightweight HealthController
 class HealthController extends Controller
 {
