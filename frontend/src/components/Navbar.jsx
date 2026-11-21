@@ -29,9 +29,9 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-40 bg-white/95 dark:bg-[#141414]/95 backdrop-blur border-b border-aastra-silver/80 dark:border-neutral-800 transition-colors">
       {/* Classic Top Announcement Bar */}
-      <div className="bg-aastra-black text-neutral-300 text-[11px] tracking-widest uppercase">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-8 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+      <div className="bg-aastra-black text-neutral-300 text-[10px] sm:text-[11px] tracking-widest uppercase">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-[32px] py-1.5 flex items-center justify-center sm:justify-between gap-4">
+          <div className="hidden sm:flex items-center gap-4 whitespace-nowrap">
             <span className="text-aastra-gold font-medium">AASTRA Architectural Hardware</span>
             <span className="hidden md:inline text-neutral-500">|</span>
             <a href="tel:+447435620033" className="hidden md:inline hover:text-aastra-gold transition">
@@ -42,10 +42,11 @@ export default function Navbar() {
               business@aastra.uk
             </a>
           </div>
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-5 whitespace-nowrap">
             <Link to="/catalogue" className="hover:text-aastra-gold transition flex items-center gap-1">
-              <FileText className="w-3 h-3" /> PDF Brochures
+              <FileText className="w-3 h-3 shrink-0" /> PDF Brochures
             </Link>
+            <span className="sm:hidden text-neutral-600">|</span>
             <Link to="/contact" className="hover:text-aastra-gold transition">
               Trade Enquiries
             </Link>
