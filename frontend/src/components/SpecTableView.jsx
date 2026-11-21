@@ -14,11 +14,14 @@ export default function SpecTableView({ table, mode = 'web', compact = false }) 
       <table
         style={{
           width: '100%',
-          borderCollapse: 'collapse',
+          borderCollapse: 'separate',
+          borderSpacing: 0,
           tableLayout: 'fixed',
           fontSize: compact ? '9px' : '9.8px',
           lineHeight: 1.25,
           fontFamily: 'Inter, Arial, sans-serif',
+          borderTop: '1px solid #3A3A3A',
+          borderLeft: '1px solid #3A3A3A',
         }}
       >
         <tbody>
@@ -33,7 +36,10 @@ export default function SpecTableView({ table, mode = 'web', compact = false }) 
                     rowSpan={cell.rowSpan > 1 ? cell.rowSpan : undefined}
                     colSpan={cell.colSpan > 1 ? cell.colSpan : undefined}
                     style={{
-                      border: '1px solid #2C2C2C',
+                      borderTop: 'none',
+                      borderLeft: 'none',
+                      borderRight: '1px solid #4A4A4A',
+                      borderBottom: '1px solid #4A4A4A',
                       padding: compact ? '4px 5px 6px 5px' : '5px 6px 7px 6px',
                       textAlign: cell.align || 'center',
                       verticalAlign: 'middle',
