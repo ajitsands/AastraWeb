@@ -1,0 +1,158 @@
+/**
+ * AASTRA Architectural Hardware — PDF Specification Templates
+ * Derived from reference brochures in Assets And Documents/
+ */
+
+export const PDF_TEMPLATES = [
+  {
+    id: 'standard',
+    name: 'Classic AASTRA Spec',
+    subtitle: 'Accessories, Door Stops, Viewers, Flush Pulls',
+    description: 'Left bullet specifications & model code, right 1–3 photos/drawings, full-width merged finish matrix table.',
+    supportsKeyValues: false,
+    supportsEnClass: false,
+    supportsBadges: false,
+    supportsSuppliedWith: false,
+    supportsFinishVariants: false,
+    supportsHeroImage: false,
+  },
+  {
+    id: 'technical_grid',
+    name: 'Technical Spec Sheet (EN / Fire)',
+    subtitle: 'Door Closers, Concealed Hinges, Mortice Locks, SS Levers',
+    description: 'Shaded Key-Value spec box, EN Classification code boxes, [F] Fire / [CAD] badges, Supplied With, drawings & ordering table.',
+    supportsKeyValues: true,
+    supportsEnClass: true,
+    supportsBadges: true,
+    supportsSuppliedWith: true,
+    supportsFinishVariants: false,
+    supportsHeroImage: false,
+  },
+  {
+    id: 'two_column_split',
+    name: 'Dual-Column Technical Sheet',
+    subtitle: 'Door Seals, Deadlocks, Compact Multi-Model Pages',
+    description: 'Renders items side-by-side in 2 clean columns with vertical divider, photo + cross-section drawing, shaded specs & compact table.',
+    supportsKeyValues: true,
+    supportsEnClass: true,
+    supportsBadges: true,
+    supportsSuppliedWith: true,
+    supportsFinishVariants: false,
+    supportsHeroImage: false,
+  },
+  {
+    id: 'tall_pull_handle',
+    name: 'Vertical Pull Handle + Size Matrix',
+    subtitle: 'Stainless Steel Pull Handles (300mm – 1800mm)',
+    description: 'Left vertical product photo & tall dimension drawing; right compact key-value specs + extended multi-size Cat. No. table.',
+    supportsKeyValues: true,
+    supportsEnClass: false,
+    supportsBadges: true,
+    supportsSuppliedWith: false,
+    supportsFinishVariants: false,
+    supportsHeroImage: false,
+  },
+  {
+    id: 'finish_gallery',
+    name: 'Finish Variant Showcase',
+    subtitle: 'Designer Brass Lever Handles & Rose/Backplate Suites',
+    description: 'Left column visual finish variant photos with codes (CRO, OTL, BGO, NEO); right technical drawings, description & finish matrix.',
+    supportsKeyValues: false,
+    supportsEnClass: false,
+    supportsBadges: false,
+    supportsSuppliedWith: false,
+    supportsFinishVariants: true,
+    supportsHeroImage: false,
+  },
+  {
+    id: 'hero_catalog',
+    name: 'Hero Editorial + Finish Strip',
+    subtitle: 'Luxury Designer Levers & Cabinet / Pull Handles',
+    description: 'Top architectural hero banner with model title overlay; bottom clean white finish variant grid & ordering matrix.',
+    supportsKeyValues: false,
+    supportsEnClass: false,
+    supportsBadges: false,
+    supportsSuppliedWith: false,
+    supportsFinishVariants: true,
+    supportsHeroImage: true,
+  },
+];
+
+export const TEMPLATE_PRESETS = {
+  closer: {
+    key_value_specs: [
+      { label: 'Version', value: 'With standard arm or interlocking hold-open arm (optional)' },
+      { label: 'Installation', value: 'Standard installation on pull side & overhead on push side' },
+      { label: 'Adjustment facility', value: 'Closing speed, latching action adjustable' },
+      { label: 'Closing force', value: 'EN 2–4' },
+      { label: 'Door width', value: '≤ 1,100 mm' },
+      { label: 'Door weight', value: '≤ 80 kg' },
+      { label: 'Opening angle', value: '≤ 180°' },
+      { label: 'Mounting', value: 'For DIN left and DIN right hand use' },
+      { label: 'Standard', value: 'Certified in compliance with EN 1154' },
+    ],
+    en_class: '4, 8, 2-4, 0/1, 1, 3',
+    badges: { fire_rated: true, cad_available: true, ce_certified: true },
+    supplied_with: 'Door closer complete with arm assembly and fixing screws',
+    packing_note: 'Packing: 1 set',
+  },
+  hinge: {
+    key_value_specs: [
+      { label: 'Area of application', value: 'For wooden frames, for flush doors' },
+      { label: 'For door type', value: 'Wooden door leaf' },
+      { label: 'Max. door weight (2 hinges)', value: '100 kg' },
+      { label: 'Opening angle', value: '180°' },
+      { label: 'Router bit Ø', value: '16 mm' },
+      { label: 'Bearing type', value: 'Maintenance-free bearing with piston guide' },
+      { label: 'Adjustment facility', value: '3D continuous — Side: ±3 mm, Height: ±3 mm, Pressure: -1/+2 mm' },
+      { label: 'Mounting', value: 'For DIN left and DIN right hand use' },
+    ],
+    en_class: '',
+    badges: { fire_rated: false, cad_available: true, ce_certified: false },
+    supplied_with: '',
+    packing_note: 'Packing: 1 or 2 pieces',
+  },
+  lockset: {
+    key_value_specs: [
+      { label: 'Area of application', value: 'For rebated or flush doors' },
+      { label: 'Material', value: 'Forend, latchbolt & deadbolt: Stainless steel; Lock case: Steel' },
+      { label: 'Deadbolt', value: '1-turn / 2-turn' },
+      { label: 'Forend', value: 'Round or square (20 mm / 24 mm)' },
+      { label: 'Lever follower', value: '8 mm' },
+      { label: 'Distance B', value: '78 mm / 72 mm' },
+      { label: 'Mounting', value: 'DIN left and DIN right, reversible' },
+      { label: 'Standard', value: 'Certified in compliance with EN 12209' },
+    ],
+    en_class: '3, X, 8, 1, 0, G, 0, B, G, 2, 0',
+    badges: { fire_rated: true, cad_available: true, ce_certified: true },
+    supplied_with: '1 mortice lock\n1 flanged striking plate\n2 deadbolt pockets',
+    packing_note: 'Packing: 1 set',
+  },
+  seal: {
+    key_value_specs: [
+      { label: 'Area of application', value: 'For rebated / perimeter doors' },
+      { label: 'Material', value: 'Thermoplastic elastomer (TPE) / Modified elastic polymer (PVC)' },
+      { label: 'Installation dim.', value: 'Groove 4 x 7 mm, striking gap 4 mm, rebate width 10 mm' },
+      { label: 'Length', value: '50 m / 100 m coil' },
+    ],
+    en_class: '',
+    badges: { fire_rated: false, cad_available: false, ce_certified: false },
+    supplied_with: '',
+    packing_note: '',
+  },
+  pull_handle: {
+    key_value_specs: [
+      { label: 'Material', value: 'Stainless steel SS304 / SS316' },
+      { label: 'Finish', value: 'Satin Stainless Steel / Black Matt' },
+      { label: 'Version', value: 'Straight supports / Inclined supports (60°)' },
+    ],
+    en_class: '',
+    badges: { fire_rated: false, cad_available: true, ce_certified: false },
+    supplied_with: 'Mounting accessories for timber, aluminium, or glass doors',
+    packing_note: '',
+  },
+};
+
+export function getTemplateMeta(id) {
+  return PDF_TEMPLATES.find((t) => t.id === id) || PDF_TEMPLATES[0];
+}

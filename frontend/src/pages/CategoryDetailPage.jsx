@@ -8,11 +8,13 @@ import CataloguePdfPreview from '../components/CataloguePdfPreview';
 export default function CategoryDetailPage() {
   const { slug } = useParams();
   const [category, setCategory] = useState(null);
+  const [activeSubSlug, setActiveSubSlug] = useState('');
   const [activeGroup, setActiveGroup] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
+    setActiveSubSlug('');
     api
       .getCategory(slug)
       .then((data) => {
@@ -75,22 +77,61 @@ export default function CategoryDetailPage() {
         </div>
       </div>
 
-      {/* Category Products */}
+      {/* Category Products + Sub Category Pills */}
       <section>
-        <h2 className="text-2xl font-semibold text-aastra-black dark:text-white mb-6">
-          Products in {category.name} ({category.items?.length || 0})
-        </h2>
-        {category.items?.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {category.items.map((item) => (
-              <ProductCard key={item.id} item={item} />
+        {category.sub_categories?.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 mb-6">
+            <button
+              type="button"
+              onClick={() => setActiveSubSlug('')}
+              className={`px-3.5 py-1.5 text-xs font-medium border transition ${
+                !activeSubSlug
+                  ? 'bg-aastra-black text-white dark:bg-aastra-gold dark:text-black border-aastra-black dark:border-aastra-gold'
+                  : 'bg-white dark:bg-[#181818] border-aastra-silver dark:border-neutral-700 text-aastra-slate dark:text-neutral-300 hover:border-aastra-gold'
+              }`}
+            >
+              All {category.name}
+            </button>
+            {category.sub_categories.map((sub) => (
+              <button
+                key={sub.id}
+                type="button"
+                onClick={() => setActiveSubSlug(sub.slug)}
+                className={`px-3.5 py-1.5 text-xs font-medium border transition ${
+                  activeSubSlug === sub.slug
+                    ? 'bg-aastra-black text-white dark:bg-aastra-gold dark:text-black border-aastra-black dark:border-aastra-gold'
+                    : 'bg-white dark:bg-[#181818] border-aastra-silver dark:border-neutral-700 text-aastra-slate dark:text-neutral-300 hover:border-aastra-gold'
+                }`}
+              >
+                {sub.name}
+              </button>
             ))}
           </div>
-        ) : (
-          <div className="p-8 border border-aastra-silver dark:border-neutral-800 text-sm text-aastra-gray bg-white dark:bg-[#181818]">
-            No items added to this category yet.
-          </div>
         )}
+
+        {(() => {
+          const visibleItems = activeSubSlug
+            ? (category.items || []).filter((it) => it.sub_category_slug === activeSubSlug)
+            : category.items || [];
+          return (
+            <>
+              <h2 className="text-2xl font-semibold text-aastra-black dark:text-white mb-6">
+                Products ({visibleItems.length})
+              </h2>
+              {visibleItems.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {visibleItems.map((item) => (
+                    <ProductCard key={item.id} item={item} />
+                  ))}
+                </div>
+              ) : (
+                <div className="p-8 border border-aastra-silver dark:border-neutral-800 text-sm text-aastra-gray bg-white dark:bg-[#181818]">
+                  No items added to this sub-category yet.
+                </div>
+              )}
+            </>
+          );
+        })()}
       </section>
 
       {/* PDF Catalogue Pages for this Category */}

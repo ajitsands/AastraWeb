@@ -19,6 +19,8 @@ class CategoryController extends Controller
 
         $itemModel = new ItemModel();
         $groupModel = new GroupModel();
+        $subModel = new SubCategoryModel();
+        $category['sub_categories'] = $subModel->getAll(['category_id' => $category['id'], 'only_active' => true]);
         $category['items'] = $itemModel->getAll(['category_id' => $category['id'], 'only_active' => true]);
         $category['groups'] = $groupModel->getAll(['category_id' => $category['id'], 'only_active' => true]);
 

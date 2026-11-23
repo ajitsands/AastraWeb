@@ -12,6 +12,7 @@ export default function CategoriesPage() {
   const [loading, setLoading] = useState(true);
 
   const selectedCategory = searchParams.get('category') || '';
+  const selectedSubCategory = searchParams.get('sub') || '';
   const selectedFinish = searchParams.get('finish') || '';
   const searchQuery = searchParams.get('q') || '';
   const [inputQuery, setInputQuery] = useState(searchQuery);
@@ -30,13 +31,14 @@ export default function CategoriesPage() {
     api
       .getItems({
         category: selectedCategory,
+        sub_category: selectedSubCategory,
         finish: selectedFinish,
         q: searchQuery,
       })
       .then(setItems)
       .catch(() => setItems([]))
       .finally(() => setLoading(false));
-  }, [selectedCategory, selectedFinish, searchQuery]);
+  }, [selectedCategory, selectedSubCategory, selectedFinish, searchQuery]);
 
   const updateParam = (key, value) => {
     const next = new URLSearchParams(searchParams);
@@ -122,26 +124,57 @@ export default function CategoriesPage() {
                 </button>
               </li>
               {categories.map((c) => (
-                <li key={c.id} className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => updateParam('category', c.slug)}
-                    className={`flex-1 text-left px-3 py-2 flex items-center justify-between transition text-xs ${
-                      selectedCategory === c.slug
-                        ? 'bg-aastra-black text-white dark:bg-aastra-gold dark:text-black font-medium'
-                        : 'text-aastra-slate dark:text-neutral-300 hover:bg-aastra-pearl dark:hover:bg-neutral-800'
-                    }`}
-                  >
-                    <span>{c.name}</span>
-                    <span className="font-mono text-[10px] opacity-70">{c.item_count || 0}</span>
-                  </button>
-                  <Link
-                    to={`/category/${c.slug}`}
-                    title="Open Category & PDF Pages"
-                    className="p-2 text-aastra-gray hover:text-aastra-gold"
-                  >
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
+                <li key={c.id} className="space-y-1">
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = new URLSearchParams(searchParams);
+                        next.set('category', c.slug);
+                        next.delete('sub');
+                        setSearchParams(next);
+                      }}
+                      className={`flex-1 text-left px-3 py-2 flex items-center justify-between transition text-xs ${
+                        selectedCategory === c.slug && !selectedSubCategory
+                          ? 'bg-aastra-black text-white dark:bg-aastra-gold dark:text-black font-medium'
+                          : 'text-aastra-slate dark:text-neutral-300 hover:bg-aastra-pearl dark:hover:bg-neutral-800'
+                      }`}
+                    >
+                      <span>{c.name}</span>
+                      <span className="font-mono text-[10px] opacity-70">{c.item_count || 0}</span>
+                    </button>
+                    <Link
+                      to={`/category/${c.slug}`}
+                      title="Open Category & PDF Pages"
+                      className="p-2 text-aastra-gray hover:text-aastra-gold"
+                    >
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+                  {(c.sub_categories || []).length > 0 && (
+                    <ul className="pl-3 space-y-0.5 border-l border-aastra-silver/60 dark:border-neutral-800 ml-2">
+                      {c.sub_categories.map((sub) => (
+                        <li key={sub.id}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const next = new URLSearchParams(searchParams);
+                              next.set('category', c.slug);
+                              next.set('sub', sub.slug);
+                              setSearchParams(next);
+                            }}
+                            className={`w-full text-left px-2.5 py-1.5 text-[11px] transition ${
+                              selectedSubCategory === sub.slug
+                                ? 'text-aastra-gold-dark dark:text-aastra-gold font-semibold bg-aastra-gold-tint dark:bg-aastra-gold/10'
+                                : 'text-aastra-gray hover:text-aastra-black dark:hover:text-white'
+                            }`}
+                          >
+                            {sub.name}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </li>
               ))}
             </ul>

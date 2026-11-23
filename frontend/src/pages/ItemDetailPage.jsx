@@ -57,14 +57,15 @@ export default function ItemDetailPage() {
     .map((l) => l.trim())
     .filter(Boolean);
 
-  // Build single-item datasheet group if user clicks Download Datasheet PDF directly on an item
+  // Build single-item datasheet group preserving item's chosen PDF template
   const singleItemGroup = {
     title: item.name,
     page_code: item.groups?.[0]?.page_code || `AH.${item.chapter_number || 8}.01`,
     section_label: item.section_label || 'ACCESSORIES',
-    category_badge: item.category_name || 'HARDWARE',
+    category_badge: item.sub_category_name || item.category_name || 'HARDWARE',
     side_tab_label: item.side_tab_label || 'DOOR HARDWARE',
     layout_mode: 'standard',
+    pdf_template: item.pdf_template || 'standard',
     show_guarantee_seal: 1,
     footer_website: 'www.aastra.uk',
     items: [item],

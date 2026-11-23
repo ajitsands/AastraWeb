@@ -5,13 +5,15 @@ class ItemController extends Controller
     public function index(): void
     {
         $filters = [
-            'only_active'   => isset($_GET['all']) ? false : true,
-            'category_id'   => $_GET['category_id'] ?? null,
-            'category_slug' => $_GET['category'] ?? null,
-            'finish_id'     => $_GET['finish_id'] ?? null,
-            'finish_slug'   => $_GET['finish'] ?? null,
-            'featured'      => !empty($_GET['featured']),
-            'search'        => $_GET['q'] ?? null,
+            'only_active'       => isset($_GET['all']) ? false : true,
+            'category_id'       => $_GET['category_id'] ?? null,
+            'category_slug'     => $_GET['category'] ?? null,
+            'sub_category_id'   => $_GET['sub_category_id'] ?? null,
+            'sub_category_slug' => $_GET['sub_category'] ?? null,
+            'finish_id'         => $_GET['finish_id'] ?? null,
+            'finish_slug'       => $_GET['finish'] ?? null,
+            'featured'          => !empty($_GET['featured']),
+            'search'            => $_GET['q'] ?? null,
         ];
         $model = new ItemModel();
         $this->success($model->getAll($filters));

@@ -76,6 +76,13 @@ $router->post('/api/categories', 'CategoryController', 'store');
 $router->put('/api/categories/{id}', 'CategoryController', 'update');
 $router->delete('/api/categories/{id}', 'CategoryController', 'destroy');
 
+// Sub Categories
+$router->get('/api/sub-categories', 'SubCategoryController', 'index');
+$router->get('/api/sub-categories/{id}', 'SubCategoryController', 'show');
+$router->post('/api/sub-categories', 'SubCategoryController', 'store');
+$router->put('/api/sub-categories/{id}', 'SubCategoryController', 'update');
+$router->delete('/api/sub-categories/{id}', 'SubCategoryController', 'destroy');
+
 // Finishes
 $router->get('/api/finishes', 'FinishController', 'index');
 $router->get('/api/finishes/{id}', 'FinishController', 'show');

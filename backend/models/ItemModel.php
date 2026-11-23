@@ -4,6 +4,7 @@ class ItemModel extends Model
 {
     public function getAll(array $filters = []): array
     {
+        (new SubCategoryModel())->ensureSchema();
         $conditions = [];
         $params = [];
 
@@ -18,6 +19,14 @@ class ItemModel extends Model
             $conditions[] = 'c.slug = ?';
             $params[] = $filters['category_slug'];
         }
+        if (!empty($filters['sub_category_id'])) {
+            $conditions[] = 'i.sub_category_id = ?';
+            $params[] = (int)$filters['sub_category_id'];
+        }
+        if (!empty($filters['sub_category_slug'])) {
+            $conditions[] = 'sc.slug = ?';
+            $params[] = $filters['sub_category_slug'];
+        }
         if (!empty($filters['finish_id'])) {
             $conditions[] = 'EXISTS (SELECT 1 FROM item_finishes ifin WHERE ifin.item_id = i.id AND ifin.finish_id = ?)';
             $params[] = (int)$filters['finish_id'];
@@ -30,18 +39,20 @@ class ItemModel extends Model
             $conditions[] = 'i.is_featured = 1';
         }
         if (!empty($filters['search'])) {
-            $conditions[] = '(i.name LIKE ? OR i.code LIKE ? OR i.specifications LIKE ? OR c.name LIKE ?)';
+            $conditions[] = '(i.name LIKE ? OR i.code LIKE ? OR i.specifications LIKE ? OR c.name LIKE ? OR sc.name LIKE ?)';
             $q = '%' . trim($filters['search']) . '%';
-            array_push($params, $q, $q, $q, $q);
+            array_push($params, $q, $q, $q, $q, $q);
         }
 
         $where = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
 
         $sql = "
             SELECT i.*, c.name AS category_name, c.slug AS category_slug,
-                   c.section_label, c.side_tab_label, c.chapter_number
+                   c.section_label, c.side_tab_label, c.chapter_number,
+                   sc.name AS sub_category_name, sc.slug AS sub_category_slug
             FROM items i
             INNER JOIN categories c ON c.id = i.category_id
+            LEFT JOIN sub_categories sc ON sc.id = i.sub_category_id
             $where
             ORDER BY c.chapter_number ASC, i.sort_order ASC, i.id ASC
         ";
@@ -55,11 +66,14 @@ class ItemModel extends Model
 
     public function findByIdOrSlug($identifier): ?array
     {
+        (new SubCategoryModel())->ensureSchema();
         $sql = "
             SELECT i.*, c.name AS category_name, c.slug AS category_slug,
-                   c.section_label, c.side_tab_label, c.chapter_number
+                   c.section_label, c.side_tab_label, c.chapter_number,
+                   sc.name AS sub_category_name, sc.slug AS sub_category_slug
             FROM items i
             INNER JOIN categories c ON c.id = i.category_id
+            LEFT JOIN sub_categories sc ON sc.id = i.sub_category_id
             WHERE " . (is_numeric($identifier) ? 'i.id = ?' : 'i.slug = ?') . "
             LIMIT 1
         ";
@@ -71,20 +85,25 @@ class ItemModel extends Model
 
     public function create(array $data): array
     {
+        (new SubCategoryModel())->ensureSchema();
         $slug = !empty($data['slug'])
             ? $this->slugify($data['slug'])
             : $this->slugify(($data['code'] ?? '') . '-' . ($data['name'] ?? 'item'));
         $slug = $this->ensureUniqueSlug($slug);
 
-        $images = array_slice($data['images'] ?? [], 0, 3);
+        $images = array_slice($data['images'] ?? [], 0, 6);
         $specTable = $data['spec_table'] ?? null;
+        $pdfTemplate = trim($data['pdf_template'] ?? 'standard') ?: 'standard';
+        $templateData = $data['template_data'] ?? null;
+        $subCatId = !empty($data['sub_category_id']) ? (int)$data['sub_category_id'] : null;
 
         $stmt = $this->db->prepare('
-            INSERT INTO items (category_id, name, slug, code, subtitle, specifications, footnote, material, images_json, spec_table_json, is_featured, is_active, sort_order)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO items (category_id, sub_category_id, name, slug, code, subtitle, specifications, footnote, material, images_json, spec_table_json, pdf_template, template_data_json, is_featured, is_active, sort_order)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ');
         $stmt->execute([
             (int)$data['category_id'],
+            $subCatId,
             trim($data['name']),
             $slug,
             trim($data['code']),
@@ -94,6 +113,8 @@ class ItemModel extends Model
             $data['material'] ?? null,
             json_encode($images, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             $specTable ? json_encode($specTable, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null,
+            $pdfTemplate,
+            $templateData ? json_encode($templateData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null,
             isset($data['is_featured']) ? (int)(bool)$data['is_featured'] : 0,
             isset($data['is_active']) ? (int)(bool)$data['is_active'] : 1,
             (int)($data['sort_order'] ?? 0),
@@ -113,6 +134,7 @@ class ItemModel extends Model
 
     public function update(int $id, array $data): ?array
     {
+        (new SubCategoryModel())->ensureSchema();
         $existing = $this->findByIdOrSlug($id);
         if (!$existing) {
             return null;
@@ -124,22 +146,32 @@ class ItemModel extends Model
         }
 
         $images = array_key_exists('images', $data)
-            ? array_slice($data['images'] ?? [], 0, 3)
+            ? array_slice($data['images'] ?? [], 0, 6)
             : $existing['images'];
         $specTable = array_key_exists('spec_table', $data)
             ? $data['spec_table']
             : $existing['spec_table'];
+        $pdfTemplate = array_key_exists('pdf_template', $data)
+            ? (trim((string)$data['pdf_template']) ?: 'standard')
+            : ($existing['pdf_template'] ?? 'standard');
+        $templateData = array_key_exists('template_data', $data)
+            ? $data['template_data']
+            : ($existing['template_data'] ?? null);
+        $subCatId = array_key_exists('sub_category_id', $data)
+            ? (!empty($data['sub_category_id']) ? (int)$data['sub_category_id'] : null)
+            : ($existing['sub_category_id'] ?? null);
 
         $stmt = $this->db->prepare('
             UPDATE items
-            SET category_id = ?, name = ?, slug = ?, code = ?, subtitle = ?,
+            SET category_id = ?, sub_category_id = ?, name = ?, slug = ?, code = ?, subtitle = ?,
                 specifications = ?, footnote = ?, material = ?,
-                images_json = ?, spec_table_json = ?,
+                images_json = ?, spec_table_json = ?, pdf_template = ?, template_data_json = ?,
                 is_featured = ?, is_active = ?, sort_order = ?
             WHERE id = ?
         ');
         $stmt->execute([
             (int)($data['category_id'] ?? $existing['category_id']),
+            $subCatId,
             isset($data['name']) ? trim($data['name']) : $existing['name'],
             $slug,
             isset($data['code']) ? trim($data['code']) : $existing['code'],
@@ -149,6 +181,8 @@ class ItemModel extends Model
             array_key_exists('material', $data) ? $data['material'] : $existing['material'],
             json_encode($images, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             $specTable ? json_encode($specTable, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null,
+            $pdfTemplate,
+            $templateData ? json_encode($templateData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null,
             array_key_exists('is_featured', $data) ? (int)(bool)$data['is_featured'] : $existing['is_featured'],
             array_key_exists('is_active', $data) ? (int)(bool)$data['is_active'] : $existing['is_active'],
             (int)($data['sort_order'] ?? $existing['sort_order']),
@@ -197,7 +231,9 @@ class ItemModel extends Model
     {
         $row['images'] = !empty($row['images_json']) ? (json_decode($row['images_json'], true) ?: []) : [];
         $row['spec_table'] = !empty($row['spec_table_json']) ? json_decode($row['spec_table_json'], true) : null;
-        unset($row['images_json'], $row['spec_table_json']);
+        $row['template_data'] = !empty($row['template_data_json']) ? json_decode($row['template_data_json'], true) : null;
+        $row['pdf_template'] = $row['pdf_template'] ?? 'standard';
+        unset($row['images_json'], $row['spec_table_json'], $row['template_data_json']);
 
         $fStmt = $this->db->prepare('
             SELECT f.id, f.name, f.slug, f.code, f.swatch_hex, f.swatch_gradient

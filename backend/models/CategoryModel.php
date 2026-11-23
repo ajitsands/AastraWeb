@@ -4,16 +4,29 @@ class CategoryModel extends Model
 {
     public function getAll(bool $onlyActive = false): array
     {
+        (new SubCategoryModel())->ensureSchema();
         $where = $onlyActive ? 'WHERE c.is_active = 1' : '';
         $sql = "
             SELECT c.*,
                    (SELECT COUNT(*) FROM items i WHERE i.category_id = c.id AND i.is_active = 1) AS item_count,
-                   (SELECT COUNT(*) FROM catalogue_groups g WHERE g.category_id = c.id AND g.is_active = 1) AS group_count
+                   (SELECT COUNT(*) FROM catalogue_groups g WHERE g.category_id = c.id AND g.is_active = 1) AS group_count,
+                   (SELECT COUNT(*) FROM sub_categories s WHERE s.category_id = c.id AND s.is_active = 1) AS sub_category_count
             FROM categories c
             $where
             ORDER BY c.chapter_number ASC, c.sort_order ASC, c.name ASC
         ";
-        return $this->db->query($sql)->fetchAll();
+        $cats = $this->db->query($sql)->fetchAll();
+
+        $subWhere = $onlyActive ? 'WHERE is_active = 1' : '';
+        $subs = $this->db->query("SELECT * FROM sub_categories $subWhere ORDER BY sort_order ASC, name ASC")->fetchAll();
+        $byCat = [];
+        foreach ($subs as $s) {
+            $byCat[(int)$s['category_id']][] = $s;
+        }
+        foreach ($cats as &$c) {
+            $c['sub_categories'] = $byCat[(int)$c['id']] ?? [];
+        }
+        return $cats;
     }
 
     public function findByIdOrSlug($identifier): ?array

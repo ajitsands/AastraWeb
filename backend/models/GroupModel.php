@@ -4,6 +4,7 @@ class GroupModel extends Model
 {
     public function getAll(array $filters = []): array
     {
+        (new SubCategoryModel())->ensureSchema();
         $conditions = [];
         $params = [];
 
@@ -18,12 +19,18 @@ class GroupModel extends Model
             $conditions[] = 'c.slug = ?';
             $params[] = $filters['category_slug'];
         }
+        if (!empty($filters['sub_category_id'])) {
+            $conditions[] = 'g.sub_category_id = ?';
+            $params[] = (int)$filters['sub_category_id'];
+        }
 
         $where = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
         $sql = "
-            SELECT g.*, c.name AS category_name, c.slug AS category_slug
+            SELECT g.*, c.name AS category_name, c.slug AS category_slug,
+                   sc.name AS sub_category_name, sc.slug AS sub_category_slug
             FROM catalogue_groups g
             INNER JOIN categories c ON c.id = g.category_id
+            LEFT JOIN sub_categories sc ON sc.id = g.sub_category_id
             $where
             ORDER BY CAST(g.chapter_number AS UNSIGNED) ASC, g.page_number ASC, g.id ASC
         ";
@@ -41,10 +48,13 @@ class GroupModel extends Model
 
     public function findByIdOrCode($identifier): ?array
     {
+        (new SubCategoryModel())->ensureSchema();
         $sql = "
-            SELECT g.*, c.name AS category_name, c.slug AS category_slug
+            SELECT g.*, c.name AS category_name, c.slug AS category_slug,
+                   sc.name AS sub_category_name, sc.slug AS sub_category_slug
             FROM catalogue_groups g
             INNER JOIN categories c ON c.id = g.category_id
+            LEFT JOIN sub_categories sc ON sc.id = g.sub_category_id
             WHERE " . (is_numeric($identifier) ? 'g.id = ?' : 'g.page_code = ?') . "
             LIMIT 1
         ";
@@ -62,20 +72,24 @@ class GroupModel extends Model
 
     public function create(array $data): array
     {
+        (new SubCategoryModel())->ensureSchema();
         $prefix = strtoupper(trim($data['prefix'] ?? 'AH'));
         $chapter = trim((string)($data['chapter_number'] ?? '8'));
         $page = trim((string)($data['page_number'] ?? '01'));
         $pageCode = !empty($data['page_code']) ? trim($data['page_code']) : "$prefix.$chapter.$page";
+        $subCatId = !empty($data['sub_category_id']) ? (int)$data['sub_category_id'] : null;
+        $pdfTemplate = trim((string)($data['pdf_template'] ?? 'standard')) ?: 'standard';
 
         $stmt = $this->db->prepare('
             INSERT INTO catalogue_groups
-                (category_id, title, prefix, chapter_number, page_number, page_code,
-                 section_label, category_badge, side_tab_label, layout_mode,
+                (category_id, sub_category_id, title, prefix, chapter_number, page_number, page_code,
+                 section_label, category_badge, side_tab_label, layout_mode, pdf_template,
                  show_guarantee_seal, footer_website, notes, is_active)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ');
         $stmt->execute([
             (int)$data['category_id'],
+            $subCatId,
             trim($data['title']),
             $prefix,
             $chapter,
@@ -85,6 +99,7 @@ class GroupModel extends Model
             strtoupper(trim($data['category_badge'] ?? $data['title'])),
             strtoupper(trim($data['side_tab_label'] ?? 'DOOR HARDWARE')),
             in_array($data['layout_mode'] ?? 'standard', ['standard', 'compact']) ? $data['layout_mode'] : 'standard',
+            $pdfTemplate,
             isset($data['show_guarantee_seal']) ? (int)(bool)$data['show_guarantee_seal'] : 1,
             trim($data['footer_website'] ?? 'www.aastra.uk'),
             $data['notes'] ?? null,
@@ -101,6 +116,7 @@ class GroupModel extends Model
 
     public function update(int $id, array $data): ?array
     {
+        (new SubCategoryModel())->ensureSchema();
         $existing = $this->findByIdOrCode($id);
         if (!$existing) {
             return null;
@@ -110,16 +126,23 @@ class GroupModel extends Model
         $chapter = trim((string)($data['chapter_number'] ?? $existing['chapter_number']));
         $page = trim((string)($data['page_number'] ?? $existing['page_number']));
         $pageCode = !empty($data['page_code']) ? trim($data['page_code']) : "$prefix.$chapter.$page";
+        $subCatId = array_key_exists('sub_category_id', $data)
+            ? (!empty($data['sub_category_id']) ? (int)$data['sub_category_id'] : null)
+            : ($existing['sub_category_id'] ?? null);
+        $pdfTemplate = array_key_exists('pdf_template', $data)
+            ? (trim((string)$data['pdf_template']) ?: 'standard')
+            : ($existing['pdf_template'] ?? 'standard');
 
         $stmt = $this->db->prepare('
             UPDATE catalogue_groups
-            SET category_id = ?, title = ?, prefix = ?, chapter_number = ?, page_number = ?, page_code = ?,
-                section_label = ?, category_badge = ?, side_tab_label = ?, layout_mode = ?,
+            SET category_id = ?, sub_category_id = ?, title = ?, prefix = ?, chapter_number = ?, page_number = ?, page_code = ?,
+                section_label = ?, category_badge = ?, side_tab_label = ?, layout_mode = ?, pdf_template = ?,
                 show_guarantee_seal = ?, footer_website = ?, notes = ?, is_active = ?
             WHERE id = ?
         ');
         $stmt->execute([
             (int)($data['category_id'] ?? $existing['category_id']),
+            $subCatId,
             isset($data['title']) ? trim($data['title']) : $existing['title'],
             $prefix,
             $chapter,
@@ -131,6 +154,7 @@ class GroupModel extends Model
             in_array($data['layout_mode'] ?? $existing['layout_mode'], ['standard', 'compact'])
                 ? ($data['layout_mode'] ?? $existing['layout_mode'])
                 : 'standard',
+            $pdfTemplate,
             array_key_exists('show_guarantee_seal', $data) ? (int)(bool)$data['show_guarantee_seal'] : $existing['show_guarantee_seal'],
             trim($data['footer_website'] ?? $existing['footer_website']),
             array_key_exists('notes', $data) ? $data['notes'] : $existing['notes'],
@@ -168,10 +192,12 @@ class GroupModel extends Model
         $stmt = $this->db->prepare('
             SELECT i.*, c.name AS category_name, c.slug AS category_slug,
                    c.section_label, c.side_tab_label, c.chapter_number,
+                   sc.name AS sub_category_name, sc.slug AS sub_category_slug,
                    gi.sort_order AS group_sort_order
             FROM catalogue_group_items gi
             INNER JOIN items i ON i.id = gi.item_id
             INNER JOIN categories c ON c.id = i.category_id
+            LEFT JOIN sub_categories sc ON sc.id = i.sub_category_id
             WHERE gi.group_id = ?
             ORDER BY gi.sort_order ASC, i.id ASC
         ');

@@ -6,6 +6,9 @@ npm-debug.log*
 # PHP / Uploads (keep sample images, ignore user runtime uploads if desired)
 backend/vendor/
 
+# Reference folders (keep local only, do not deploy to server)
+Assets And Documents/
+
 # OS & Editors
 .DS_Store
 Thumbs.db

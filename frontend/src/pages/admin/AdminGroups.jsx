@@ -2,9 +2,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Plus, Pencil, Trash2, Eye, X, ArrowUp, ArrowDown } from 'lucide-react';
 import { api } from '../../api/client';
 import CataloguePdfPreview from '../../components/CataloguePdfPreview';
+import { PDF_TEMPLATES } from '../../constants/pdfTemplates';
 
 const createEmptyGroup = (defaultCatId = '') => ({
   category_id: defaultCatId,
+  sub_category_id: '',
   title: '',
   prefix: 'AH',
   chapter_number: '8',
@@ -13,6 +15,7 @@ const createEmptyGroup = (defaultCatId = '') => ({
   category_badge: 'DOOR STOPS',
   side_tab_label: 'DOOR HARDWARE',
   layout_mode: 'standard',
+  pdf_template: 'standard',
   show_guarantee_seal: true,
   footer_website: 'www.aastra.uk',
   item_ids: [],
@@ -84,6 +87,7 @@ export default function AdminGroups() {
       category_badge: grp.category_badge || '',
       side_tab_label: grp.side_tab_label || 'DOOR HARDWARE',
       layout_mode: grp.layout_mode || 'standard',
+      pdf_template: grp.pdf_template || 'standard',
       show_guarantee_seal: !!Number(grp.show_guarantee_seal),
       footer_website: grp.footer_website || 'www.aastra.uk',
       item_ids: grp.item_ids || [],
@@ -291,6 +295,22 @@ export default function AdminGroups() {
                 onChange={(e) => setForm({ ...form, category_badge: e.target.value })}
                 className="w-full px-3 py-2 text-xs bg-aastra-pearl dark:bg-neutral-900 border border-aastra-silver dark:border-neutral-700"
               />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider mb-1">
+                PDF Template
+              </label>
+              <select
+                value={form.pdf_template}
+                onChange={(e) => setForm({ ...form, pdf_template: e.target.value })}
+                className="w-full px-3 py-2 text-xs bg-aastra-pearl dark:bg-neutral-900 border border-aastra-silver dark:border-neutral-700"
+              >
+                {PDF_TEMPLATES.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider mb-1">

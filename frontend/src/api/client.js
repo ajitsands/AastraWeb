@@ -64,6 +64,21 @@ export const api = {
     request(`/api/categories/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
   deleteCategory: (id) => request(`/api/categories/${id}`, { method: 'DELETE' }),
 
+  // Sub Categories
+  getSubCategories: (params = {}) => {
+    const qs = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') qs.set(k, v);
+    });
+    const qStr = qs.toString();
+    return request(`/api/sub-categories${qStr ? `?${qStr}` : ''}`);
+  },
+  createSubCategory: (payload) =>
+    request('/api/sub-categories', { method: 'POST', body: JSON.stringify(payload) }),
+  updateSubCategory: (id, payload) =>
+    request(`/api/sub-categories/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
+  deleteSubCategory: (id) => request(`/api/sub-categories/${id}`, { method: 'DELETE' }),
+
   // Finishes
   getFinishes: (all = false) => request(`/api/finishes${all ? '?all=1' : ''}`),
   getFinish: (idOrSlug) => request(`/api/finishes/${encodeURIComponent(idOrSlug)}`),
