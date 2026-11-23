@@ -4,8 +4,11 @@
  * Auto-detects Local (localhost) vs Production (aastra.uk)
  */
 
-$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-$isProduction = (stripos($host, 'aastra.uk') !== false);
+$host = $_SERVER['HTTP_HOST'] ?? '';
+$isProduction = (stripos($host, 'aastra.uk') !== false)
+    || (stripos(__DIR__, '/home/aastra') !== false)
+    || (function_exists('get_current_user') && get_current_user() === 'aastra')
+    || (getenv('APP_ENV') === 'production');
 
 if ($isProduction) {
     define('APP_ENV', 'production');
