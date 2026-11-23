@@ -1,8 +1,95 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Pencil, Trash2, Upload, X, Image as ImageIcon, LayoutTemplate, Sparkles } from 'lucide-react';
+import { Plus, Pencil, Trash2, Upload, X, Image as ImageIcon, LayoutTemplate, Sparkles, Eye, EyeOff } from 'lucide-react';
 import { api, resolveAssetUrl } from '../../api/client';
 import TableBuilder, { createBlankTable } from '../../components/TableBuilder';
+import CataloguePdfPreview from '../../components/CataloguePdfPreview';
 import { PDF_TEMPLATES, TEMPLATE_PRESETS, getTemplateMeta } from '../../constants/pdfTemplates';
+
+/**
+ * Miniature SVG wireframe preview for each of the 6 PDF templates
+ */
+function TemplateMiniThumb({ id }) {
+  return (
+    <svg viewBox="0 0 64 84" className="w-11 h-14 shrink-0 border border-aastra-silver/80 bg-white rounded-[2px]">
+      {/* Header bar */}
+      <rect x="4" y="4" width="56" height="3" fill="#4A4A4A" />
+      <rect x="4" y="8" width="56" height="1" fill="#C9A227" />
+      <rect x="4" y="11" width="20" height="4" fill="#7A7D82" />
+      <rect x="46" y="11" width="14" height="3.5" fill="#A0A3A8" />
+
+      {id === 'standard' && (
+        <>
+          <rect x="4" y="19" width="22" height="16" fill="#F3F3F3" />
+          <rect x="29" y="19" width="14" height="16" fill="#E5E7EB" />
+          <rect x="46" y="19" width="14" height="16" fill="#E5E7EB" />
+          <rect x="4" y="38" width="56" height="10" fill="#DCDCDC" />
+          <rect x="4" y="52" width="22" height="12" fill="#F3F3F3" />
+          <rect x="29" y="52" width="31" height="12" fill="#E5E7EB" />
+          <rect x="4" y="66" width="56" height="8" fill="#DCDCDC" />
+        </>
+      )}
+
+      {id === 'technical_grid' && (
+        <>
+          <rect x="4" y="18" width="56" height="4" fill="#2C2C2C" />
+          <rect x="4" y="24" width="24" height="24" fill="#E5E7EB" />
+          <rect x="30" y="24" width="30" height="18" fill="#EFEFEF" />
+          <rect x="30" y="43" width="30" height="5" fill="#D4D4D4" />
+          <rect x="4" y="52" width="56" height="20" fill="#DCDCDC" />
+        </>
+      )}
+
+      {id === 'two_column_split' && (
+        <>
+          <rect x="4" y="18" width="26" height="14" fill="#E5E7EB" />
+          <rect x="4" y="34" width="26" height="14" fill="#EFEFEF" />
+          <rect x="4" y="50" width="26" height="18" fill="#DCDCDC" />
+          <line x1="32" y1="18" x2="32" y2="72" stroke="#CCCCCC" strokeWidth="1" />
+          <rect x="34" y="18" width="26" height="14" fill="#E5E7EB" />
+          <rect x="34" y="34" width="26" height="14" fill="#EFEFEF" />
+          <rect x="34" y="50" width="26" height="18" fill="#DCDCDC" />
+        </>
+      )}
+
+      {id === 'tall_pull_handle' && (
+        <>
+          <rect x="4" y="18" width="9" height="54" fill="#E5E7EB" />
+          <rect x="15" y="18" width="9" height="54" fill="#EFEFEF" />
+          <rect x="27" y="18" width="33" height="12" fill="#F2F2F2" />
+          <rect x="27" y="32" width="33" height="40" fill="#DCDCDC" />
+        </>
+      )}
+
+      {id === 'finish_gallery' && (
+        <>
+          <rect x="4" y="18" width="25" height="9" fill="#E5E7EB" />
+          <rect x="4" y="29" width="25" height="9" fill="#D6D3D1" />
+          <rect x="4" y="40" width="25" height="9" fill="#DFBD4A" opacity="0.6" />
+          <rect x="4" y="51" width="25" height="9" fill="#525252" />
+          <rect x="4" y="62" width="25" height="9" fill="#A3A3A3" />
+          <rect x="32" y="18" width="28" height="24" fill="#F3F3F3" />
+          <rect x="32" y="45" width="28" height="26" fill="#DCDCDC" />
+        </>
+      )}
+
+      {id === 'hero_catalog' && (
+        <>
+          <rect x="4" y="18" width="56" height="28" fill="#7A7D82" />
+          <rect x="8" y="38" width="22" height="4" fill="#FFFFFF" />
+          <rect x="4" y="49" width="17" height="11" fill="#E5E7EB" />
+          <rect x="23.5" y="49" width="17" height="11" fill="#DFBD4A" opacity="0.65" />
+          <rect x="43" y="49" width="17" height="11" fill="#404040" />
+          <rect x="4" y="63" width="56" height="10" fill="#DCDCDC" />
+        </>
+      )}
+
+      {/* Footer bar */}
+      <rect x="4" y="76" width="14" height="4" fill="#7A7D82" />
+      <circle cx="44" cy="78" r="2.5" fill="none" stroke="#C9A227" strokeWidth="1" />
+      <rect x="49" y="77" width="11" height="2" fill="#4A4A4A" />
+    </svg>
+  );
+}
 
 const defaultTemplateData = () => ({
   key_value_specs: [],
@@ -43,6 +130,7 @@ export default function AdminItems() {
   const [form, setForm] = useState(createEmptyItem());
   const [editingId, setEditingId] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [showTemplatePreview, setShowTemplatePreview] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingIdx, setUploadingIdx] = useState(false);
   const [error, setError] = useState('');
@@ -361,14 +449,25 @@ export default function AdminItems() {
             </div>
           </div>
 
-          {/* ================= PDF SPECIFICATION TEMPLATE PICKER ================= */}
-          <div className="border border-aastra-gold/60 bg-aastra-pearl/40 dark:bg-neutral-900/50 p-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <LayoutTemplate className="w-4 h-4 text-aastra-gold" />
-              <h3 className="text-xs font-semibold uppercase tracking-wider">
-                PDF Specification Template Style
-              </h3>
+          {/* ================= PDF SPECIFICATION TEMPLATE PICKER + LIVE PREVIEW ================= */}
+          <div className="border border-aastra-gold/60 bg-aastra-pearl/40 dark:bg-neutral-900/50 p-4 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <LayoutTemplate className="w-4 h-4 text-aastra-gold" />
+                <h3 className="text-xs font-semibold uppercase tracking-wider">
+                  PDF Specification Template Style
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowTemplatePreview((v) => !v)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-aastra-gold bg-white dark:bg-[#1a1a1a] text-aastra-black dark:text-aastra-gold hover:bg-aastra-gold hover:text-black transition"
+              >
+                {showTemplatePreview ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                {showTemplatePreview ? 'Hide Live PDF Preview' : 'Show Live PDF Preview'}
+              </button>
             </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
               {PDF_TEMPLATES.map((tpl) => {
                 const active = form.pdf_template === tpl.id;
@@ -376,31 +475,159 @@ export default function AdminItems() {
                   <button
                     key={tpl.id}
                     type="button"
-                    onClick={() => setForm({ ...form, pdf_template: tpl.id })}
-                    className={`text-left p-3 border transition ${
+                    onClick={() => {
+                      setForm({ ...form, pdf_template: tpl.id });
+                      setShowTemplatePreview(true);
+                    }}
+                    className={`text-left p-3 border transition flex items-start gap-3 ${
                       active
-                        ? 'border-aastra-gold bg-white dark:bg-[#1c1c1c] ring-1 ring-aastra-gold'
+                        ? 'border-aastra-gold bg-white dark:bg-[#1c1c1c] ring-1 ring-aastra-gold shadow-sm'
                         : 'border-aastra-silver/80 dark:border-neutral-800 bg-white/70 dark:bg-[#161616] hover:border-aastra-gold/60'
                     }`}
                   >
-                    <div className="text-xs font-semibold text-aastra-black dark:text-white flex items-center justify-between">
-                      <span>{tpl.name}</span>
-                      {active && (
-                        <span className="text-[9px] uppercase px-1.5 py-0.5 bg-aastra-gold text-black font-bold">
-                          Selected
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-[10px] text-aastra-gold-dark dark:text-aastra-gold mt-0.5 font-medium">
-                      {tpl.subtitle}
-                    </div>
-                    <div className="text-[10px] text-aastra-gray mt-1 leading-snug">
-                      {tpl.description}
+                    <TemplateMiniThumb id={tpl.id} />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-semibold text-aastra-black dark:text-white flex items-center justify-between gap-1">
+                        <span className="truncate">{tpl.name}</span>
+                        {active && (
+                          <span className="text-[9px] uppercase px-1.5 py-0.5 bg-aastra-gold text-black font-bold shrink-0">
+                            Active
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[10px] text-aastra-gold-dark dark:text-aastra-gold mt-0.5 font-medium">
+                        {tpl.subtitle}
+                      </div>
+                      <div className="text-[10px] text-aastra-gray mt-1 leading-snug">
+                        {tpl.description}
+                      </div>
                     </div>
                   </button>
                 );
               })}
             </div>
+
+            {/* Live A4 Output Preview for the Selected Template */}
+            {showTemplatePreview && (() => {
+              const selectedCat = categories.find((c) => Number(c.id) === Number(form.category_id));
+              const selectedSub = filteredSubs.find((s) => Number(s.id) === Number(form.sub_category_id));
+              const hasRealTable = form.spec_table?.cells?.some((row) => row.some((c) => c.text?.trim()));
+              const fallbackKv =
+                form.pdf_template === 'tall_pull_handle'
+                  ? TEMPLATE_PRESETS.pull_handle.key_value_specs
+                  : form.pdf_template === 'two_column_split'
+                  ? TEMPLATE_PRESETS.seal.key_value_specs
+                  : TEMPLATE_PRESETS.closer.key_value_specs;
+
+              const sampleVariants = [
+                { code: 'SSS', name: 'Satin Stainless Steel', image_url: '/samples/arh201_photo.png' },
+                { code: 'AB', name: 'Antique Brass', image_url: '/samples/aae825_photo.png' },
+                { code: 'MB', name: 'Black Matt', image_url: '/samples/aae683_photo.png' },
+                { code: 'SB', name: 'Satin Brass', image_url: '/samples/aae835_photo.png' },
+              ];
+
+              const sampleTable = {
+                rows: 3,
+                cols: 5,
+                cells: [
+                  [
+                    { text: 'Material', rowSpan: 2, colSpan: 1, isHeader: true, hidden: false, align: 'center' },
+                    { text: 'Finishes', rowSpan: 1, colSpan: 4, isHeader: true, hidden: false, align: 'center' },
+                    { text: '', rowSpan: 1, colSpan: 1, isHeader: true, hidden: true, align: 'center' },
+                    { text: '', rowSpan: 1, colSpan: 1, isHeader: true, hidden: true, align: 'center' },
+                    { text: '', rowSpan: 1, colSpan: 1, isHeader: true, hidden: true, align: 'center' },
+                  ],
+                  [
+                    { text: '', rowSpan: 1, colSpan: 1, isHeader: true, hidden: true, align: 'center' },
+                    { text: 'Satin SS', rowSpan: 1, colSpan: 1, isHeader: true, hidden: false, align: 'center' },
+                    { text: 'Ant. Brass', rowSpan: 1, colSpan: 1, isHeader: true, hidden: false, align: 'center' },
+                    { text: 'Satin Brass', rowSpan: 1, colSpan: 1, isHeader: true, hidden: false, align: 'center' },
+                    { text: 'Black Matt', rowSpan: 1, colSpan: 1, isHeader: true, hidden: false, align: 'center' },
+                  ],
+                  [
+                    { text: form.material || 'SS304', rowSpan: 1, colSpan: 1, isHeader: false, hidden: false, align: 'center' },
+                    { text: '650.01.101', rowSpan: 1, colSpan: 1, isHeader: false, hidden: false, align: 'center' },
+                    { text: '650.01.121', rowSpan: 1, colSpan: 1, isHeader: false, hidden: false, align: 'center' },
+                    { text: '650.01.141', rowSpan: 1, colSpan: 1, isHeader: false, hidden: false, align: 'center' },
+                    { text: '650.01.151', rowSpan: 1, colSpan: 1, isHeader: false, hidden: false, align: 'center' },
+                  ],
+                ],
+              };
+
+              const previewItem = {
+                id: 'preview-1',
+                name: form.name.trim() || `Sample ${tplMeta.name}`,
+                code: form.code.trim() || 'AAH.101',
+                subtitle: form.subtitle.trim() || tplMeta.subtitle,
+                specifications:
+                  form.specifications.trim() ||
+                  'Architectural SS304 / Solid Brass construction\nPrecision engineered for commercial & residential doors\nSupplied with matching screws and fixings',
+                footnote: form.footnote,
+                images: form.images.length
+                  ? form.images
+                  : [
+                      { url: '/samples/aae671_photo.png', caption: 'Product View', type: 'photo' },
+                      { url: '/samples/aae671_drawing.png', caption: 'Technical Drawing', type: 'drawing' },
+                    ],
+                spec_table: hasRealTable ? form.spec_table : sampleTable,
+                pdf_template: form.pdf_template,
+                template_data: {
+                  ...tData,
+                  key_value_specs: tData.key_value_specs?.length ? tData.key_value_specs : fallbackKv,
+                  en_class: tData.en_class || (form.pdf_template === 'technical_grid' ? '4, 8, 2-4, 0/1, 1, 3' : ''),
+                  badges:
+                    tData.badges?.fire_rated || tData.badges?.cad_available || tData.badges?.ce_certified
+                      ? tData.badges
+                      : { fire_rated: form.pdf_template === 'technical_grid', cad_available: true, ce_certified: true },
+                  supplied_with:
+                    tData.supplied_with ||
+                    (tplMeta.supportsSuppliedWith ? '1 main hardware unit\n1 fixing pack & installation template' : ''),
+                  packing_note: tData.packing_note || 'Packing: 1 set',
+                  finish_variants: tData.finish_variants?.length ? tData.finish_variants : sampleVariants,
+                  hero_image_url: tData.hero_image_url || form.images?.[0]?.url || '/samples/arh201_photo.png',
+                },
+              };
+
+              const previewItems =
+                form.pdf_template === 'two_column_split'
+                  ? [
+                      previewItem,
+                      {
+                        ...previewItem,
+                        id: 'preview-2',
+                        code: form.code.trim() ? `${form.code.trim()}-B` : 'AAH.102',
+                        name: form.name.trim() ? `${form.name.trim()} (Variant 2)` : 'Second Model (Side-by-Side)',
+                      },
+                    ]
+                  : [previewItem];
+
+              const previewGroup = {
+                title: previewItem.name,
+                page_code: `AH.${selectedCat?.chapter_number || 8}.01`,
+                section_label: selectedCat?.section_label || 'HARDWARE',
+                category_badge: (selectedSub?.name || selectedCat?.name || 'SPECIFICATION').toUpperCase(),
+                side_tab_label: selectedCat?.side_tab_label || 'DOOR HARDWARE',
+                layout_mode: 'standard',
+                pdf_template: form.pdf_template,
+                show_guarantee_seal: 1,
+                footer_website: 'www.aastra.uk',
+                items: previewItems,
+              };
+
+              return (
+                <div className="bg-white dark:bg-[#121212] border border-aastra-silver dark:border-neutral-800 p-4 rounded-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-3 pb-2 border-b border-aastra-pearl dark:border-neutral-800 text-xs">
+                    <span className="font-semibold text-aastra-black dark:text-white">
+                      Live A4 Output Preview — <span className="text-aastra-gold-dark dark:text-aastra-gold">{tplMeta.name}</span>
+                    </span>
+                    <span className="text-[11px] text-aastra-gray">
+                      Updates live as you type or upload images (empty fields show sample placeholders)
+                    </span>
+                  </div>
+                  <CataloguePdfPreview group={previewGroup} showControls={false} scale={0.62} />
+                </div>
+              );
+            })()}
           </div>
 
           {/* ================= TEMPLATE-SPECIFIC FIELDS ================= */}
